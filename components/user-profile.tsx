@@ -17,6 +17,7 @@ import {
   UserMinus,
   Settings,
   MessageCircle,
+  Camera,
 } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
@@ -27,6 +28,7 @@ interface Profile {
   display_name: string
   bio: string | null
   avatar_url: string | null
+  banner_url: string | null
   location: string | null
   website: string | null
   is_verified: boolean
@@ -245,13 +247,16 @@ export default function UserProfile({ profile, currentUserId, isOwnProfile }: Us
     return (
       <div className="space-y-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start gap-6 animate-pulse">
-              <div className="w-24 h-24 bg-muted rounded-full"></div>
-              <div className="flex-1 space-y-4">
-                <div className="w-48 h-6 bg-muted rounded"></div>
-                <div className="w-32 h-4 bg-muted rounded"></div>
-                <div className="w-full h-4 bg-muted rounded"></div>
+          <CardContent className="p-0">
+            <div className="h-48 bg-muted animate-pulse"></div>
+            <div className="p-6">
+              <div className="flex items-start gap-6 animate-pulse">
+                <div className="w-24 h-24 bg-muted rounded-full -mt-12 border-4 border-background"></div>
+                <div className="flex-1 space-y-4 mt-4">
+                  <div className="w-48 h-6 bg-muted rounded"></div>
+                  <div className="w-32 h-4 bg-muted rounded"></div>
+                  <div className="w-full h-4 bg-muted rounded"></div>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -263,105 +268,131 @@ export default function UserProfile({ profile, currentUserId, isOwnProfile }: Us
   return (
     <div className="space-y-6">
       {/* Profile Header */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <Avatar className="w-24 h-24">
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="text-2xl">{profile.display_name.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="relative h-48 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
+            {profile.banner_url ? (
+              <img
+                src={profile.banner_url || "/placeholder.svg"}
+                alt={`${profile.display_name}'s banner`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500" />
+            )}
+            {isOwnProfile && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white border-0"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Edit Banner
+              </Button>
+            )}
+          </div>
 
-            <div className="flex-1 space-y-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-                  {profile.is_verified && <CheckCircle className="w-6 h-6 text-blue-500" />}
-                </div>
-                <p className="text-muted-foreground">@{profile.username}</p>
-              </div>
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              <Avatar className="w-24 h-24 -mt-12 border-4 border-background">
+                <AvatarImage src={profile.avatar_url || undefined} />
+                <AvatarFallback className="text-2xl">{profile.display_name.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
 
-              {profile.bio && <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>}
-
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                {profile.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{profile.location}</span>
+              <div className="flex-1 space-y-4 md:mt-0 mt-2">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-2xl font-bold">{profile.display_name}</h1>
+                    {profile.is_verified && <CheckCircle className="w-6 h-6 text-blue-500" />}
                   </div>
-                )}
-                {profile.website && (
+                  <p className="text-muted-foreground">@{profile.username}</p>
+                </div>
+
+                {profile.bio && <p className="text-foreground whitespace-pre-wrap">{profile.bio}</p>}
+
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  {profile.location && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span>{profile.location}</span>
+                    </div>
+                  )}
+                  {profile.website && (
+                    <div className="flex items-center gap-1">
+                      <LinkIcon className="w-4 h-4" />
+                      <a
+                        href={profile.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                      >
+                        {profile.website}
+                      </a>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
-                    <LinkIcon className="w-4 h-4" />
-                    <a
-                      href={profile.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      {profile.website}
-                    </a>
+                    <Calendar className="w-4 h-4" />
+                    <span>Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}</span>
                   </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}</span>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-6 text-sm">
-                <div className="flex items-center gap-1">
-                  <span className="font-semibold">{postsCount}</span>
-                  <span className="text-muted-foreground">Posts</span>
-                </div>
-                <button
-                  onClick={() => handleTabChange("followers")}
-                  className="flex items-center gap-1 hover:underline"
-                >
-                  <span className="font-semibold">{followersCount}</span>
-                  <span className="text-muted-foreground">Followers</span>
-                </button>
-                <button
-                  onClick={() => handleTabChange("following")}
-                  className="flex items-center gap-1 hover:underline"
-                >
-                  <span className="font-semibold">{followingCount}</span>
-                  <span className="text-muted-foreground">Following</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              {isOwnProfile ? (
-                <Link href="/settings">
-                  <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-                    <Settings className="w-4 h-4" />
-                    Edit Profile
-                  </Button>
-                </Link>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleFollow}
-                    variant={isFollowing ? "outline" : "default"}
-                    className="flex items-center gap-2"
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold">{postsCount}</span>
+                    <span className="text-muted-foreground">Posts</span>
+                  </div>
+                  <button
+                    onClick={() => handleTabChange("followers")}
+                    className="flex items-center gap-1 hover:underline"
                   >
-                    {isFollowing ? (
-                      <>
-                        <UserMinus className="w-4 h-4" />
-                        Unfollow
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        Follow
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" size="icon">
-                    <MessageCircle className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
+                    <span className="font-semibold">{followersCount}</span>
+                    <span className="text-muted-foreground">Followers</span>
+                  </button>
+                  <button
+                    onClick={() => handleTabChange("following")}
+                    className="flex items-center gap-1 hover:underline"
+                  >
+                    <span className="font-semibold">{followingCount}</span>
+                    <span className="text-muted-foreground">Following</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2 md:mt-4">
+                {isOwnProfile ? (
+                  <Link href="/settings">
+                    <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+                      <Settings className="w-4 h-4" />
+                      Edit Profile
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleFollow}
+                      variant={isFollowing ? "outline" : "default"}
+                      className="flex items-center gap-2"
+                    >
+                      {isFollowing ? (
+                        <>
+                          <UserMinus className="w-4 h-4" />
+                          Unfollow
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          Follow
+                        </>
+                      )}
+                    </Button>
+                    <Link href={`/chat?user=${profile.username}`}>
+                      <Button variant="outline" size="icon">
+                        <MessageCircle className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>

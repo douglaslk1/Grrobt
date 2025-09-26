@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Captcha } from "@/components/captcha"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -19,10 +20,17 @@ export default function SignUpPage() {
   const [displayName, setDisplayName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false)
   const router = useRouter()
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!isCaptchaVerified) {
+      setError("Please complete the security verification")
+      return
+    }
+
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
@@ -30,18 +38,21 @@ export default function SignUpPage() {
     if (password !== confirmPassword) {
       setError("Passwords do not match")
       setIsLoading(false)
+      setIsCaptchaVerified(false)
       return
     }
 
     if (username.length < 3) {
       setError("Username must be at least 3 characters long")
       setIsLoading(false)
+      setIsCaptchaVerified(false)
       return
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long")
       setIsLoading(false)
+      setIsCaptchaVerified(false)
       return
     }
 
@@ -67,6 +78,7 @@ export default function SignUpPage() {
         } else {
           setError(error.message || "An error occurred during signup")
         }
+        setIsCaptchaVerified(false)
         return
       }
 
@@ -75,6 +87,7 @@ export default function SignUpPage() {
     } catch (error: unknown) {
       console.error("[v0] Signup error:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
+      setIsCaptchaVerified(false)
     } finally {
       setIsLoading(false)
     }
@@ -147,8 +160,13 @@ export default function SignUpPage() {
                   className="h-11"
                 />
               </div>
+              <Captcha onVerify={setIsCaptchaVerified} />
               {error && <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">{error}</div>}
-              <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                disabled={isLoading || !isCaptchaVerified}
+              >
                 {isLoading ? "Creating account..." : "Sign Up"}
               </Button>
             </form>
