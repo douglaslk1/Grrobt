@@ -74,15 +74,44 @@ class CustomSupabaseClient implements SupabaseClient {
   }
 
   auth = {
-    signUp: async (credentials: { email: string; password: string }) => {
+    signUp: async (credentials: {
+      email: string
+      password: string
+      options?: {
+        emailRedirectTo?: string
+        data?: any
+      }
+    }) => {
       try {
+        const payload: any = {
+          email: credentials.email,
+          password: credentials.password,
+        }
+
+        // Add user metadata if provided
+        if (credentials.options?.data) {
+          payload.data = credentials.options.data
+        }
+
+        // Add email redirect URL if provided
+        if (credentials.options?.emailRedirectTo) {
+          payload.confirm_url = credentials.options.emailRedirectTo
+        }
+
         const data = await this.request("/auth/v1/signup", {
           method: "POST",
-          body: JSON.stringify(credentials),
+          body: JSON.stringify(payload),
         })
+
+        if (data.error) {
+          return { data: null, error: data.error }
+        }
+
         return { data, error: null }
-      } catch (error) {
-        return { data: null, error }
+      } catch (error: any) {
+        const errorMessage = error.message || "An error occurred during signup"
+        console.error("[v0] Signup error:", errorMessage)
+        return { data: null, error: { message: errorMessage } }
       }
     },
 
@@ -101,8 +130,18 @@ class CustomSupabaseClient implements SupabaseClient {
         }
 
         return { data, error: null }
-      } catch (error) {
-        return { data: null, error }
+      } catch (error: any) {
+        let errorMessage = "Invalid email or password"
+        if (error.message?.includes("400")) {
+          errorMessage = "Invalid email or password"
+        } else if (error.message?.includes("422")) {
+          errorMessage = "Please check your email and password"
+        } else if (error.message?.includes("429")) {
+          errorMessage = "Too many login attempts. Please try again later."
+        }
+
+        console.error("[v0] Login error:", error.message)
+        return { data: null, error: { message: errorMessage } }
       }
     },
 

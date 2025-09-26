@@ -39,8 +39,15 @@ export default function SignUpPage() {
       return
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log("[v0] Starting signup process...")
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -51,9 +58,22 @@ export default function SignUpPage() {
           },
         },
       })
-      if (error) throw error
+
+      console.log("[v0] Signup response:", { data, error })
+
+      if (error) {
+        if (error.message?.includes("already registered")) {
+          setError("This email is already registered. Please try logging in instead.")
+        } else {
+          setError(error.message || "An error occurred during signup")
+        }
+        return
+      }
+
+      console.log("[v0] Signup successful, redirecting to verify email...")
       router.push("/auth/verify-email")
     } catch (error: unknown) {
+      console.error("[v0] Signup error:", error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
