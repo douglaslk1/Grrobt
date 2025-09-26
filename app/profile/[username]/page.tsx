@@ -26,8 +26,24 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound()
   }
 
-  // Get current user's profile
-  const { data: currentUserProfile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  // Get current user's profile - create if doesn't exist
+  let { data: currentUserProfile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  if (!currentUserProfile) {
+    const { data: newProfile, error: createError } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        username: `user_${user.id.slice(0, 8)}`,
+        display_name: user.email?.split("@")[0] || "User",
+      })
+      .select()
+      .single()
+
+    if (!createError) {
+      currentUserProfile = newProfile
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">

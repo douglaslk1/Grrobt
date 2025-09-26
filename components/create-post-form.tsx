@@ -118,7 +118,13 @@ export default function CreatePostForm() {
 
   const uploadAudio = async (audioBlob: Blob): Promise<string | null> => {
     const supabase = createClient()
-    const fileName = `audio_${Date.now()}.webm`
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return null
+
+    const fileName = `${user.id}/audio_${Date.now()}.webm`
 
     const { data, error } = await supabase.storage.from("audio").upload(fileName, audioBlob)
 
@@ -169,7 +175,7 @@ export default function CreatePostForm() {
         .from("posts")
         .insert({
           author_id: user.id,
-          content: content.trim(),
+          content: content.trim() || null,
           audio_url: audioUrl,
           media_type: mediaType,
           duration: audioBlob ? recordingTime : null,

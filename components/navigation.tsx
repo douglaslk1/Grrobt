@@ -42,6 +42,10 @@ export default function Navigation({ user, profile }: NavigationProps) {
     router.push("/")
   }
 
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User"
+  const username = profile?.username || `user_${user?.id?.slice(0, 8) || "unknown"}`
+  const avatarUrl = profile?.avatar_url
+
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
       <div className="container mx-auto px-4">
@@ -90,21 +94,21 @@ export default function Navigation({ user, profile }: NavigationProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.display_name} />
-                    <AvatarFallback>{profile?.display_name?.charAt(0)?.toUpperCase() || "U"}</AvatarFallback>
+                    <AvatarImage src={avatarUrl || "/placeholder.svg"} alt={displayName} />
+                    <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{profile?.display_name}</p>
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">@{profile?.username}</p>
+                    <p className="font-medium">{displayName}</p>
+                    <p className="w-[200px] truncate text-sm text-muted-foreground">@{username}</p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={`/profile/${profile?.username}`} className="flex items-center gap-2">
+                  <Link href={`/profile/${username}`} className="flex items-center gap-2">
                     <User className="w-4 h-4" />
                     Profile
                   </Link>
